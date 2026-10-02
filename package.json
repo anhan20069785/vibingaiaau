@@ -1,0 +1,11 @@
+{
+  "name": "ecdsa-p256-lab",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Web app thuc hanh ECDSA P-256 theo NIST FIPS 186-5 va SP 800-186",
+  "scripts": {
+    "test": "node --test tests/ecdsa.test.mjs tests/interop.test.mjs",
+    "serve": "node scripts/serve.mjs"
+  }
+}

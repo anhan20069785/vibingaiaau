@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ký bằng khóa elliptic curve, P-256 theo FIPS 186-5</title>
+<meta name="description" content="Bàn thực hành ECDSA P-256: sinh khóa, ký, xác minh, đối chiếu với NIST FIPS 186-5 và SP 800-186.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Tới nội dung chính</a>
+<header class="masthead">
+  <div class="masthead-inner">
+    <p class="masthead-title">Ký bằng khóa elliptic curve</p>
+    <p class="masthead-sub">Thực hành ECDSA trên đường cong P-256 theo NIST FIPS 186-5, đối chiếu NIST SP 800-186, sinh số bí mật k theo IETF RFC 6979.</p>
+    <nav class="masthead-nav" aria-label="Các phần của trang">
+      <a href="#sec-params">Tham số miền</a>
+      <a href="#sec-key">Sinh khóa</a>
+      <a href="#sec-sign">Ký</a>
+      <a href="#sec-verify">Xác minh</a>
+      <a href="#sec-tests">Kiểm thử phá hoại</a>
+      <a href="#sec-report">Đối chiếu chuẩn</a>
+      <a href="#sec-sources">Nguồn</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <p class="status-line" data-el="statusLine" role="status" aria-live="polite">Đang nạp.</p>
+
+  <section id="sec-params" class="block">
+    <ol class="steps">
+      <li class="step">
+        <div class="step-body">
+          <div class="step-main">
+            <h2>Tham số miền P-256</h2>
+            <p class="prose"><span data-el="curveFact">Đang nạp tham số.</span></p>
+            <table class="data-table">
+              <caption class="table-caption">Tham số in nguyên văn trong NIST SP 800-186, mục 3.2.1.3. Cột giá trị nhóm 8 chữ số hex cho dễ đối chiếu bản in.</caption>
+              <tbody data-el="parameterBody"></tbody>
+            </table>
+          </div>
+          <aside class="step-aside">
+            <p class="aside-label">Độ mạnh bảo mật theo len(n)</p>
+            <table class="data-table compact">
+              <caption class="table-caption">NIST FIPS 186-5, Bảng 1 trong mục 6.1.1.</caption>
+              <thead>
+                <tr><th scope="col">Số bit của n</th><th scope="col">Độ mạnh bảo mật</th></tr>
+              </thead>
+              <tbody data-el="securityBody"></tbody>
+            </table>
+            <p class="aside-label">Mục đích được phép của từng đường cong</p>
+            <table class="data-table compact">
+              <caption class="table-caption">NIST SP 800-186, Bảng 2 trong mục 3.1.2.</caption>
+              <thead>
+                <tr><th scope="col">Đường cong</th><th scope="col">Mục đích</th></tr>
+              </thead>
+              <tbody data-el="usageBody"></tbody>
+            </table>
+          </aside>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-body">
+          <div class="step-main">
+            <h2>Thứ tự các bước theo chuẩn</h2>
+            <p class="prose">FIPS 186-5 mục 6.4.1 đặt ký trước xác minh, và mục 6.4.2 đặt phép xác minh sau khi kiểm tra khoảng của r và s. Trang này giữ đúng thứ tự đó, mỗi bước là một khối riêng bên dưới.</p>
+            <p class="prose">Sinh khóa ở mục 6.2.1 và Phụ lục A.2.1: chọn d trong [1, n-1], rồi tính Q = [d]G. Số bí mật k theo mục 6.3, và với chữ ký tất định thì theo mục 6.3.2 cùng Phụ lục A.3.3.</p>
+          </div>
+          <aside class="step-aside">
+            <p class="aside-label">Chọn chế độ</p>
+            <p class="prose">Trang chạy một chế độ duy nhất: ký tất định theo RFC 6979. Chế độ này không cần nguồn ngẫu nhiên chất lượng cao, và cùng khóa cùng thông điệp luôn cho cùng chữ ký, nên đối chiếu được từng byte với WebCrypto.</p>
+          </aside>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="sec-key" class="block">
+    <div class="block-head">
+      <p class="block-index">Bước 1</p>
+      <h2>Sinh khóa trên P-256</h2>
+      <p class="block-note">WebCrypto sinh cặp khóa. Trang tính lại Q = [d]G bằng số học đường cong tự viết rồi so với khóa công khai, và dựng lại PKCS#8 cùng SPKI bằng bộ mã hóa DER tự viết để so với bản của trình duyệt.</p>
+    </div>
+    <div class="block-grid">
+      <div class="panel">
+        <div class="control-row">
+          <button type="button" class="button button-primary" data-el="generateKey" data-busy="true">Sinh cặp khóa P-256</button>
+          <button type="button" class="button" data-copy-target="rawPublic">Sao chép điểm công khai</button>
+        </div>
+        <p class="note" data-el="keyNote">Chưa sinh khóa.</p>
+        <label class="field">
+          <span class="field-label">Khóa bí mật d, hex</span>
+          <textarea class="mono" rows="2" readonly data-el="dValue"></textarea>
+          <span class="field-hint" data-el="dLength"></span>
+        </label>
+        <div class="field-pair">
+          <label class="field">
+            <span class="field-label">x, hex</span>
+            <textarea class="mono" rows="2" readonly data-el="xValue"></textarea>
+          </label>
+          <label class="field">
+            <span class="field-label">y, hex</span>
+            <textarea class="mono" rows="2" readonly data-el="yValue"></textarea>
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">Điểm công khai không nén, 64 byte hex</span>
+          <textarea class="mono" id="rawPublic" rows="3" readonly data-el="rawPublic"></textarea>
+          <span class="field-hint" data-el="pointNote"></span>
+        </label>
+      </div>
+      <div class="panel">
+        <label class="field">
+          <span class="field-label">Khóa bí mật, PKCS#8 PEM</span>
+          <textarea class="mono" id="pkcs8Pem" rows="7" readonly data-el="pkcs8Pem"></textarea>
+        </label>
+        <button type="button" class="button" data-copy-target="pkcs8Pem">Sao chép PEM khóa bí mật</button>
+        <label class="field">
+          <span class="field-label">Khóa công khai, SPKI PEM</span>
+          <textarea class="mono" id="spkiPem" rows="7" readonly data-el="spkiPem"></textarea>
+        </label>
+        <button type="button" class="button" data-copy-target="spkiPem">Sao chép PEM khóa công khai</button>
+        <p class="note" data-el="platformNote"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-sign" class="block">
+    <div class="block-head">
+      <p class="block-index">Bước 2</p>
+      <h2>Ký thông điệp</h2>
+      <p class="block-note">Đường đi: băm SHA-256, rút gọn thành số e, sinh k theo RFC 6979, tính R = [k]G, r = x_R mod n, rồi s = k^-1 (e + r d) mod n. Trang in từng giá trị trung gian để đối chiếu với chuẩn.</p>
+    </div>
+    <div class="block-grid">
+      <div class="panel">
+        <label class="field">
+          <span class="field-label">Thông điệp cần ký</span>
+          <textarea id="messageInput" rows="5" data-el="messageInput">Ký bằng khóa elliptic curve trên đường cong P-256.</textarea>
+          <span class="field-hint" data-el="messageLength">chưa tính</span>
+        </label>
+        <div class="control-row">
+          <button type="button" class="button button-primary" data-el="signMessage" data-busy="true" data-needs-key="true">Ký thông điệp</button>
+          <button type="button" class="button" data-el="hashMessage" data-busy="true">Chỉ tính SHA-256</button>
+        </div>
+      </div>
+      <div class="panel">
+        <dl class="values">
+          <dt>H = SHA-256(M)</dt><dd class="hex" data-el="hashValue">chưa tính</dd>
+          <dt>e rút từ H</dt><dd class="hex" data-el="eValue">chưa tính</dd>
+          <dt>k theo RFC 6979</dt><dd class="hex" data-el="kValue">chưa sinh</dd>
+          <dt>r</dt><dd class="hex" data-el="rValue">chưa tính</dd>
+          <dt>s</dt><dd class="hex" data-el="sValue">chưa tính</dd>
+        </dl>
+        <label class="field">
+          <span class="field-label">Chữ ký dạng raw, 64 byte hex</span>
+          <textarea class="mono" id="rawSignature" rows="3" readonly data-el="rawSignature"></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">Chữ ký dạng DER, hex</span>
+          <textarea class="mono" id="derSignature" rows="4" readonly data-el="derSignature"></textarea>
+        </label>
+        <label class="field">
+          <span class="field-label">Chữ ký dạng DER, nhóm 8 chữ số</span>
+          <textarea class="mono" id="derHex" rows="4" readonly data-el="derHex"></textarea>
+        </label>
+        <div class="control-row">
+          <button type="button" class="button" data-copy-target="derSignature">Sao chép chữ ký DER</button>
+          <button type="button" class="button" data-el="compareRawDer" data-busy="true" data-needs-key="true">Đối chiếu raw và DER</button>
+        </div>
+        <p class="note" data-el="compareNote">Chưa có chữ ký để đối chiếu hai dạng biểu diễn.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-verify" class="block">
+    <div class="block-head">
+      <p class="block-index">Bước 3</p>
+      <h2>Xác minh chữ ký</h2>
+      <p class="block-note">Kiểm tra r và s trong [1, n-1], tính u = e s^-1 mod n và v = r s^-1 mod n, dựng R1 = [u]G + [v]Q, chấp nhận khi r bằng x_R1 mod n. Trang chạy song song số học đường cong tự viết và WebCrypto, rồi so hai kết quả.</p>
+    </div>
+    <div class="block-grid">
+      <div class="panel">
+        <div class="control-row">
+          <button type="button" class="button button-primary" data-el="verifyCurrent" data-busy="true" data-needs-key="true">Xác minh nội dung hiện tại</button>
+        </div>
+        <p class="result result-idle" data-el="verifyOutcome">Chưa xác minh lần nào.</p>
+        <dl class="values">
+          <dt>H của nội dung vừa kiểm</dt><dd class="hex" data-el="verifyHash">chưa tính</dd>
+          <dt>r đọc từ DER</dt><dd class="hex" data-el="verifyR">chưa đọc</dd>
+          <dt>s đọc từ DER</dt><dd class="hex" data-el="verifyS">chưa đọc</dd>
+        </dl>
+        <p class="note" data-el="verifySteps">Chưa chạy phép xác minh.</p>
+        <details class="details">
+          <summary class="details-summary">Xác minh chữ ký dán từ ngoài</summary>
+          <div class="details-body">
+            <label class="field">
+              <span class="field-label">Chữ ký DER, PEM hoặc hex</span>
+              <textarea class="mono" id="pastedSignature" rows="4" data-el="pastedSignature"></textarea>
+            </label>
+            <button type="button" class="button" data-el="verifyExternal" data-busy="true" data-needs-key="true">Xác minh chữ ký này với nội dung hiện tại</button>
+          </div>
+        </details>
+      </div>
+      <div class="panel">
+        <details class="details" open>
+          <summary class="details-summary">Chi tiết phép xác minh theo §6.4.2</summary>
+          <div class="details-body">
+            <p class="prose">Bảy bước của chuẩn, kết quả từng bước ghi ở khối bên trái. Khối này giữ bảng kiểm thử của cả phiên chạy.</p>
+            <ol class="step-list">
+              <li>r và s là số nguyên trong [1, n-1].</li>
+              <li>Tính H = SHA-256(M).</li>
+              <li>Rút e từ H.</li>
+              <li>Tính s^-1 mod n.</li>
+              <li>Tính u = e s^-1 mod n và v = r s^-1 mod n.</li>
+              <li>Dựng R1 = [u]G + [v]Q, loại điểm vô cực.</li>
+              <li>Chấp nhận khi r bằng x_R1 mod n.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="details">
+          <summary class="details-summary">Nhập khóa công khai từ PEM hoặc hex</summary>
+          <div class="details-body">
+            <label class="field">
+              <span class="field-label">SPKI PEM hoặc điểm công khai hex</span>
+              <textarea class="mono" id="spkiImport" rows="5" data-el="spkiImport"></textarea>
+            </label>
+            <button type="button" class="button" data-el="importSpki" data-busy="true">Nhập và kiểm tra điểm</button>
+            <label class="field">
+              <span class="field-label">Điểm nhập lại được, hex</span>
+              <textarea class="mono" id="importedPoint" rows="2" readonly data-el="importedPoint"></textarea>
+            </label>
+            <p class="note">Kiểm tra điểm theo NIST SP 800-186 Phụ lục D.1.1.1: loại điểm vô cực, tọa độ trong [0, p-1], và điểm phải nằm trên đường cong.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-tests" class="block">
+    <div class="block-head">
+      <p class="block-index">Bước 4</p>
+      <h2>Kiểm thử phá hoại</h2>
+      <p class="block-note">Mỗi nút chạy một ca và ghi kết quả vào bảng. Ca hợp lệ phải được chấp nhận, ca phá hoại phải bị từ chối. Bảng là bằng chứng của lần chạy hiện tại, không phải số liệu mẫu.</p>
+    </div>
+    <div class="block-grid">
+      <div class="panel">
+        <div class="control-row">
+          <button type="button" class="button" data-el="verifyTampered" data-busy="true" data-needs-key="true">Sửa 1 bit của bản đã ký</button>
+          <button type="button" class="button" data-el="verifyWrongKey" data-busy="true" data-needs-key="true">Dùng khóa công khai khác</button>
+          <button type="button" class="button" data-el="reuseK" data-busy="true" data-needs-key="true">Dùng lại k cho thông điệp thứ hai</button>
+        </div>
+        <p class="prose">Nút thứ ba tái hiện lỗi dùng lại số bí mật k, và cho thấy khóa bí mật suy ra được từ hai chữ ký cùng k. Đây là lý do FIPS 186-5 mục 6.3 buộc mỗi chữ ký phải có một k mới.</p>
+      </div>
+      <div class="panel">
+        <p class="aside-label">Bảng kết quả kiểm thử</p>
+        <p class="table-summary" data-el="findingSummary">Chưa chạy ca nào.</p>
+        <p class="empty-state" data-el="findingEmpty">Chưa chạy ca nào. Bấm một nút kiểm thử, kết quả sẽ hiện ở đây.</p>
+        <table class="data-table" hidden data-el="findingTable">
+          <caption class="table-caption">Mỗi dòng là một ca đã chạy trong phiên này, kèm kỳ vọng và kết quả quan sát được.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Ca</th>
+              <th scope="col">Kỳ vọng</th>
+              <th scope="col">Quan sát</th>
+              <th scope="col">Kết luận</th>
+            </tr>
+          </thead>
+          <tbody data-el="findingBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="sec-report" class="block">
+    <div class="block-head">
+      <p class="block-index">Đối chiếu</p>
+      <h2>Yêu cầu chuẩn, nơi thực hiện trong mã, và bằng chứng</h2>
+      <p class="block-note">Bảng ba cột: điều khoản trong NIST FIPS 186-5 hoặc SP 800-186, hàm tương ứng trong mã nguồn, và cách kiểm chứng. Bảng đầy đủ nằm trong BAO_CAO.md.</p>
+    </div>
+    <div class="panel">
+      <table class="data-table">
+        <caption class="table-caption">Trích từ bảng đối chiếu trong BAO_CAO.md.</caption>
+        <thead>
+          <tr>
+            <th scope="col">Điều khoản</th>
+            <th scope="col">Nơi thực hiện</th>
+            <th scope="col">Bằng chứng</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>§6.2.1 và Phụ lục A.2.1, d trong [1, n-1], Q = [d]G</td><td><code>generateKeyPair</code> trong <code>src/ecdsa.js</code></td><td>Trang tính lại Q và so với khóa công khai, in kết quả ở Bước 1</td></tr>
+          <tr><td>§6.3, mỗi chữ ký có một k mới, 0 &lt; k &lt; n</td><td><code>generateK</code> trong <code>src/rfc6979.js</code></td><td>Ca "dùng lại k" suy ra được khóa bí mật, ghi ở bảng kiểm thử</td></tr>
+          <tr><td>§6.4.1, r = x_R mod n và s = k^-1 (e + r d) mod n</td><td><code>signMessage</code> trong <code>src/ecdsa.js</code></td><td>Byte chữ ký trùng WebCrypto, kiểm trong <code>tests/ecdsa.test.mjs</code></td></tr>
+          <tr><td>§6.4.2, u = e s^-1, v = r s^-1, R1 = [u]G + [v]Q</td><td><code>verifyWithMath</code> trong <code>src/ecdsa.js</code></td><td>Hai đường tính đồng ý trên mọi ca, ghi ở Bước 3</td></tr>
+          <tr><td>§6.4, băm đầu ra dài hơn len(n) thì lấy len(n) bit trái nhất</td><td><code>bits2int</code> trong <code>src/rfc6979.js</code></td><td>Dùng chung cho đường ký và đường xác minh</td></tr>
+          <tr><td>SP 800-186 Phụ lục D.1.1.1, kiểm tra điểm công khai</td><td><code>validatePublicPoint</code> trong <code>src/ecdsa.js</code></td><td>Ca sửa điểm công khai bị loại trước khi tính, trong bộ kiểm thử</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="sec-sources" class="block">
+    <div class="block-head">
+      <p class="block-index">Nguồn</p>
+      <h2>Tài liệu chuẩn đã dùng</h2>
+    </div>
+    <div class="panel">
+      <ul class="source-list">
+        <li>
+          <span class="source-name">NIST FIPS 186-5, Digital Signature Standard</span>
+          <span class="source-meta">Ban hành 3 tháng 2 năm 2023, thay thế FIPS 186-4. Dùng cho mục 6 (ECDSA), Bảng 1 trong 6.1.1, và Phụ lục A.3.3.</span>
+          <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf">nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-5.pdf</a>
+        </li>
+        <li>
+          <span class="source-name">NIST SP 800-186, Recommendations for Discrete Logarithm-based Cryptography</span>
+          <span class="source-meta">Tháng 2 năm 2023. Dùng cho mục 3.2.1.3 (tham số P-256), Bảng 1 và Bảng 2 trong 3.1.2, Phụ lục D.1 (kiểm tra điểm công khai).</span>
+          <a href="https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186.pdf">nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-186.pdf</a>
+        </li>
+        <li>
+          <span class="source-name">IETF RFC 6979, Deterministic Usage of DSA and ECDSA</span>
+          <span class="source-meta">Mục 3.2 và Phụ lục A.2.5. FIPS 186-5 mục 6.3.2 dẫn chiếu cho chữ ký tất định.</span>
+          <a href="https://www.rfc-editor.org/rfc/rfc6979.txt">rfc-editor.org/rfc/rfc6979.txt</a>
+        </li>
+        <li>
+          <span class="source-name">NIST FIPS 180-4, Secure Hash Standard</span>
+          <span class="source-meta">Định nghĩa SHA-256 dùng trong ký và xác minh.</span>
+          <a href="https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf">nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>Trang tĩnh, không gọi mạng. Mọi phép tính mật mã chạy tại trình duyệt.</p>
+  <p>Bộ kiểm thử và báo cáo đối chiếu nằm trong <code>tests/</code> và <code>BAO_CAO.md</code>.</p>
+</footer>
+
+<script type="module" src="src/lab.js"></script>
+</body>
+</html>
