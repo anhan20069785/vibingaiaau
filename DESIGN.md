@@ -31,8 +31,8 @@ khi chiếu máy chiếu trong phòng sáng.
 | Thẻ | `#ffffff` | thẻ bước, mặt bảng, vùng nhập được |
 | Thẻ chìm | `#f1f3f7` | ô chỉ đọc, hàng xen kẽ, nền phụ |
 | Mực | `#0f172a` | chữ chính |
-| Mực nhạt | `#5b6572` | chú thích, nhãn |
-| Mực mờ | `#8a93a3` | nhãn phụ, chữ khóa |
+| Mực nhạt | `#55606f` | chú thích, nhãn |
+| Mực mờ | `#616a78` | nhãn phụ, chữ khóa |
 | Đường kẻ | `#e3e7ee` | viền 1px, đường phân cách |
 | Đường kẻ đậm | `#cdd4e0` | viền ô nhập |
 | Xanh | `#1d4ed8` | chip số bước, nút chính, viền tiêu điểm |
