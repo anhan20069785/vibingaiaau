@@ -7,6 +7,7 @@ Trang tĩnh, không gọi mạng. Mọi phép tính chạy trong trình duyệt.
 phụ thuộc ngoài, chạy được khi ngắt mạng.
 
 - Bản chạy thử: <https://anhan20069785.github.io/vibingaiaau/>
+- Kịch bản demo trước giảng viên: [`DEMO.md`](DEMO.md)
 - Báo cáo đối chiếu chuẩn: [`BAO_CAO.md`](BAO_CAO.md)
 - Ghi chú dùng trợ lý AI: [`AI_USAGE.md`](AI_USAGE.md)
 
