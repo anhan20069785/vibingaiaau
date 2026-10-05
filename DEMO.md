@@ -1,6 +1,6 @@
 # Kịch bản demo trước giảng viên
 
-Trang đã xuất bản: <https://anhan20069785.github.io/vibingaiaau/>
+Trang đã xuất bản: <https://anhan20069785.github.io/> (dự phòng: <https://anhan20069785.github.io/vibingaiaau/>)
 
 Mở sẵn tab này trước giờ demo, và tắt thông báo để không bị chen ngang. Trang chạy offline sau
 lần nạp đầu, nên mạng yếu cũng không sao. Nếu mạng hỏng hẳn, chạy `npm run serve` rồi mở

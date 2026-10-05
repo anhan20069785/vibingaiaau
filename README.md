@@ -6,7 +6,8 @@ từng bước với NIST FIPS 186-5 và NIST SP 800-186. Số bí mật `k` sin
 Trang tĩnh, không gọi mạng. Mọi phép tính chạy trong trình duyệt. Không tải font, không có
 phụ thuộc ngoài, chạy được khi ngắt mạng.
 
-- Bản chạy thử: <https://anhan20069785.github.io/vibingaiaau/>
+- Bản chạy thử (domain gốc): <https://anhan20069785.github.io/>
+- Bản dự phòng (subpath): <https://anhan20069785.github.io/vibingaiaau/>
 - Kịch bản demo trước giảng viên: [`DEMO.md`](DEMO.md)
 - Báo cáo đối chiếu chuẩn: [`BAO_CAO.md`](BAO_CAO.md)
 - Ghi chú dùng trợ lý AI: [`AI_USAGE.md`](AI_USAGE.md)
@@ -55,13 +56,11 @@ git init
 git add .
 git commit -m "Ban thuc hanh ECDSA P-256"
 git branch -M main
-git remote add origin https://github.com/anhan20069785/vibingaiaau.git
+git remote add origin https://github.com/anhan20069785/anhan20069785.github.io.git
 git push -u origin main
-gh api repos/anhan20069785/vibingaiaau/pages -X POST -f 'source[branch]=main' -f 'source[path]=/'
 ```
 
-Trang chạy ở `https://anhan20069785.github.io/vibingaiaau/`. Đường dẫn trong trang đều là tương
-đối, nên chạy đúng ở thư mục con của trang.
+Trang chạy tại domain gốc `https://anhan20069785.github.io/`.
 
 ## Nguồn
 
